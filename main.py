@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import httpx
+import re
 
 load_dotenv()
 
@@ -22,8 +23,24 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
 
+class AnalyzeRequest(BaseModel):
+    prompt: str
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY
+
+def clean_and_shorten_reply(text: str, max_sentences: int = 4) -> str:
+    # Hilangkan simbol **, ##, --, *, #, dan spasi di awal baris
+    text = re.sub(r"(\*\*|##|--|\*|#)", "", text)
+    text = re.sub(r"^\s+", "", text, flags=re.MULTILINE)
+    # Hilangkan spasi berlebih
+    text = re.sub(r"\s+", " ", text).strip()
+    # Potong maksimal max_sentences kalimat
+    sentences = re.split(r"(?<=[.!?]) +", text)
+    short_sentences = [s.strip() for s in sentences[:max_sentences] if s.strip()]
+    # Gabungkan dengan baris baru agar mudah dibaca
+    short_text = "\n".join(short_sentences)
+    return short_text
 
 @app.post("/api/chatbot")
 async def chatbot_endpoint(request: ChatRequest):
@@ -39,8 +56,28 @@ async def chatbot_endpoint(request: ChatRequest):
             response = await client.post(GEMINI_API_URL, json=payload, timeout=20)
             response.raise_for_status()
             data = response.json()
-            # Ambil respons teks dari Gemini
             reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "[No response]")
+            reply = clean_and_shorten_reply(reply)
+            return JSONResponse({"reply": reply})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.post("/api/llm-analyze")
+async def llm_analyze_endpoint(request: AnalyzeRequest):
+    if not GEMINI_API_KEY:
+        return JSONResponse({"error": "Gemini API key not set."}, status_code=500)
+    payload = {
+        "contents": [
+            {"parts": [{"text": request.prompt}]}
+        ]
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(GEMINI_API_URL, json=payload, timeout=20)
+            response.raise_for_status()
+            data = response.json()
+            reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "[No response]")
+            reply = clean_and_shorten_reply(reply)
             return JSONResponse({"reply": reply})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500) 
