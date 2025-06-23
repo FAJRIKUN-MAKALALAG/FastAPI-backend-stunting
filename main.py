@@ -46,9 +46,17 @@ def clean_and_shorten_reply(text: str, max_sentences: int = 4) -> str:
 async def chatbot_endpoint(request: ChatRequest):
     if not GEMINI_API_KEY:
         return JSONResponse({"error": "Gemini API key not set."}, status_code=500)
+    # Sistem prompt untuk membatasi topik
+    system_prompt = (
+        "Anda adalah asisten ahli gizi anak dan pencegahan stunting. "
+        "Jawab hanya pertanyaan seputar gizi anak dan stunting. "
+        "Jika ada pertanyaan di luar topik, balas dengan: 'Maaf, saya hanya dapat membantu seputar gizi anak dan stunting.'"
+    )
+    # Gabungkan sistem prompt dengan pesan user
+    full_message = f"{system_prompt}\n\nPertanyaan user: {request.message}"
     payload = {
         "contents": [
-            {"parts": [{"text": request.message}]}
+            {"parts": [{"text": full_message}]}
         ]
     }
     try:
