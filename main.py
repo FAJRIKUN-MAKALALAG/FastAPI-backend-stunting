@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Request, Path
+from fastapi import FastAPI, Request, Path, HTTPException, Header, Depends
 
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -10,8 +10,9 @@ import re
 from supabase_client import (
     get_children, get_doctors,
     insert_child, update_child, delete_child,
-    get_notifications, insert_notification, mark_notification_read, delete_notification, mark_all_notifications_read, delete_all_notifications
+    get_notifications, insert_notification, mark_notification_read, delete_notification, mark_all_notifications_read, delete_all_notifications, supabase
 )
+import jwt
 
 load_dotenv()
 
@@ -34,6 +35,9 @@ class AnalyzeRequest(BaseModel):
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY
+
+JWT_SECRET = os.getenv("JWT_SECRET", "secret-key-anda")
+JWT_ALGO = "HS256"
 
 def clean_and_shorten_reply(text: str, max_sentences: int = 4) -> str:
     # Hilangkan simbol **, ##, --, *, #, dan spasi di awal baris
@@ -192,4 +196,45 @@ def supabase_status():
         data = get_children()
         return JSONResponse({"status": "ok", "message": "Supabase connected", "sample": data[:1] if data else []})
     except Exception as e:
-        return JSONResponse({"status": "error", "message": str(e)}, status_code=500) 
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+
+# Helper untuk ambil user dari Supabase
+def get_user_by_email(email):
+    response = supabase.table("profiles").select("*").eq("email", email).single().execute()
+    return response.data
+
+def verify_password(plain, hashed):
+    # Untuk demo, password disimpan plain (tidak direkomendasikan untuk production!)
+    return plain == hashed
+
+# Endpoint login
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post("/api/login")
+def login(request: LoginRequest):
+    user = get_user_by_email(request.email)
+    if not user or not verify_password(request.password, user.get("password")):
+        raise HTTPException(status_code=401, detail="Email atau password salah")
+    # Buat JWT token
+    token = jwt.encode({"user_id": user["id"], "email": user["email"]}, JWT_SECRET, algorithm=JWT_ALGO)
+    return {"token": token, "user": {"id": user["id"], "email": user["email"], "role": user.get("role")}}
+
+# Dependency untuk auth
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+security = HTTPBearer()
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGO])
+        user = get_user_by_email(payload["email"])
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token tidak valid")
+
+@app.get("/api/me")
+def me(user=Depends(get_current_user)):
+    return {"id": user["id"], "email": user["email"], "role": user.get("role")} 
