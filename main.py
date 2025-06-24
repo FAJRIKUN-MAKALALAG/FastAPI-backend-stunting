@@ -183,4 +183,13 @@ def remove_all_notifications():
         data = delete_all_notifications()
         return JSONResponse({"data": data})
     except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500) 
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.get("/api/supabase-status")
+def supabase_status():
+    try:
+        # Cek koneksi dengan query sederhana
+        data = get_children()
+        return JSONResponse({"status": "ok", "message": "Supabase connected", "sample": data[:1] if data else []})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500) 
