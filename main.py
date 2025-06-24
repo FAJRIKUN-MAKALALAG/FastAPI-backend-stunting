@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Path
 
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -7,7 +7,11 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import httpx
 import re
-from supabase_client import get_children, get_doctors
+from supabase_client import (
+    get_children, get_doctors,
+    insert_child, update_child, delete_child,
+    get_notifications, insert_notification, mark_notification_read, delete_notification, mark_all_notifications_read, delete_all_notifications
+)
 
 load_dotenv()
 
@@ -106,4 +110,86 @@ def read_doctors():
         data = get_doctors()
         return JSONResponse({"data": data})
     except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500) 
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.post("/api/children")
+def create_child(child: dict):
+    try:
+        data = insert_child(child)
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.patch("/api/children/{child_id}")
+def patch_child(child_id: str, update: dict):
+    try:
+        data = update_child(child_id, update)
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.delete("/api/children/{child_id}")
+def remove_child(child_id: str):
+    try:
+        data = delete_child(child_id)
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+# NOTIFICATIONS
+@app.get("/api/notifications")
+def read_notifications():
+    try:
+        data = get_notifications()
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.post("/api/notifications")
+def create_notification(notif: dict):
+    try:
+        data = insert_notification(notif)
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.patch("/api/notifications/{notif_id}/read")
+def patch_notification_read(notif_id: str):
+    try:
+        data = mark_notification_read(notif_id)
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.delete("/api/notifications/{notif_id}")
+def remove_notification(notif_id: str):
+    try:
+        data = delete_notification(notif_id)
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.patch("/api/notifications/read-all")
+def patch_all_notifications_read():
+    try:
+        data = mark_all_notifications_read()
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.delete("/api/notifications")
+def remove_all_notifications():
+    try:
+        data = delete_all_notifications()
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.get("/api/supabase-status")
+def supabase_status():
+    try:
+        # Cek koneksi dengan query sederhana
+        data = get_children()
+        return JSONResponse({"status": "ok", "message": "Supabase connected", "sample": data[:1] if data else []})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500) 
