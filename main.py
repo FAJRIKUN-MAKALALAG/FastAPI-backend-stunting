@@ -7,14 +7,73 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import httpx
 import re
-from supabase_client import (
-    get_children, get_doctors,
-    insert_child, update_child, delete_child,
-    get_notifications, insert_notification, mark_notification_read, delete_notification, mark_all_notifications_read, delete_all_notifications, supabase
-)
+from supabase import create_client, Client
 import jwt
 
-load_dotenv()
+# Paksa path ke file .env
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+
+print("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
+print("SUPABASE_SERVICE_KEY:", os.getenv("SUPABASE_SERVICE_KEY"))
+
+# Ambil URL dan Service Key dari environment variable
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")  # Gunakan service key untuk backend
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise Exception("SUPABASE_URL dan SUPABASE_SERVICE_KEY harus di-set di environment variable!")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Contoh helper function: ambil semua data anak
+def get_children():
+    response = supabase.table("children").select("*").execute()
+    return response.data
+
+def get_doctors():
+    response = supabase.table("profiles").select("*").eq("role", "doctor").execute()
+    return response.data
+
+def insert_child(child_data):
+    response = supabase.table("children").insert(child_data).execute()
+    return response.data
+
+def update_child(child_id, update_data):
+    response = supabase.table("children").update(update_data).eq("id", child_id).execute()
+    return response.data
+
+def delete_child(child_id):
+    response = supabase.table("children").delete().eq("id", child_id).execute()
+    return response.data
+
+# NOTIFICATIONS
+def get_notifications(filters=None):
+    query = supabase.table("notifications").select("*")
+    if filters:
+        for key, value in filters.items():
+            query = query.eq(key, value)
+    response = query.execute()
+    return response.data
+
+def insert_notification(notif_data):
+    response = supabase.table("notifications").insert(notif_data).execute()
+    return response.data
+
+def mark_notification_read(notif_id):
+    response = supabase.table("notifications").update({"is_read": True}).eq("id", notif_id).execute()
+    return response.data
+
+def delete_notification(notif_id):
+    response = supabase.table("notifications").delete().eq("id", notif_id).execute()
+    return response.data
+
+def mark_all_notifications_read():
+    response = supabase.table("notifications").update({"is_read": True}).execute()
+    return response.data
+
+def delete_all_notifications():
+    response = supabase.table("notifications").delete().execute()
+    return response.data
 
 app = FastAPI()
 
@@ -237,4 +296,4 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
 @app.get("/api/me")
 def me(user=Depends(get_current_user)):
-    return {"id": user["id"], "email": user["email"], "role": user.get("role")} 
+    return {"id": user["id"], "email": user["email"], "role": user.get("role")}
