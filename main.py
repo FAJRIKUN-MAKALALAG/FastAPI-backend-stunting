@@ -1,11 +1,13 @@
 import os
 from fastapi import FastAPI, Request
+
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import httpx
 import re
+from supabase_client import get_children, get_doctors
 
 load_dotenv()
 
@@ -87,5 +89,21 @@ async def llm_analyze_endpoint(request: AnalyzeRequest):
             reply = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "[No response]")
             reply = clean_and_shorten_reply(reply)
             return JSONResponse({"reply": reply})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.get("/api/children")
+def read_children():
+    try:
+        data = get_children()
+        return JSONResponse({"data": data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.get("/api/doctors")
+def read_doctors():
+    try:
+        data = get_doctors()
+        return JSONResponse({"data": data})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500) 
