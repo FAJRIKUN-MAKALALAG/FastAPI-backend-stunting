@@ -18,7 +18,7 @@ app = FastAPI()
 # Allow CORS for local dev and Render
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://stuntingcaresulut.domcloud.dev/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
