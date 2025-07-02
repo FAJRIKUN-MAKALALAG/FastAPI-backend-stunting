@@ -70,7 +70,7 @@ JWT_SECRET=your_jwt_secret
 ### 3. **Jalankan Server**
 
 ```sh
-uvicorn main:app --reload
+uvicorn main:app --host 0.0.0.0 --port 8000 
 ```
 
 Server berjalan di `localhost:8000` (atau port lain sesuai kebutuhan).
