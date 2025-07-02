@@ -110,3 +110,5 @@ Server berjalan di `localhost:8000` (atau port lain sesuai kebutuhan).
 
 - Pastikan perubahan pada integrasi Supabase/LLM/Chatbot selalu via backend.
 - Jangan hardcode credential di frontend.
+
+... fajrikun
