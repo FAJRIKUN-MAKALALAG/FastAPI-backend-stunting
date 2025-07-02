@@ -1,5 +1,30 @@
 # Stunting Map Care Plan Backend
 
+## 📋 Functional Requirements
+
+- Menyediakan REST API untuk frontend (FastAPI).
+- Endpoint untuk login, register, dan autentikasi user (jika ada).
+- Endpoint untuk Chatbot Gemini AI (`/api/chatbot`).
+- Endpoint untuk analisis LLM (`/api/llm-analyze`).
+- Endpoint untuk mengirimkan Supabase URL & anon key ke frontend (`/api/supabase-keys`).
+- Validasi dan sanitasi input dari frontend.
+- Mendukung CORS untuk domain frontend yang diizinkan.
+- Menyimpan dan mengambil data anak, status gizi, dan notifikasi (jika ada endpoint terkait).
+- Menghitung Z-Score dan status gizi anak (jika dilakukan di backend).
+- Menyediakan notifikasi otomatis jika status gizi/stunting berisiko (jika ada logic di backend).
+
+## 📋 Non-Functional Requirements
+
+- Backend harus berjalan stabil dan responsif (FastAPI, async endpoint).
+- Semua credential (Supabase, Gemini API) hanya disimpan di backend, tidak di frontend.
+- Mendukung deployment di Render.com dan server lokal.
+- Mendukung testing (unit/integration) untuk endpoint utama.
+- Kode harus menggunakan Python 3.9+ dan dependency yang jelas di `requirements.txt`.
+- Dokumentasi endpoint dan setup harus jelas di README.
+- Mendukung CORS dan keamanan API (JWT, dsb jika ada).
+- Error handling yang baik dan logging error ke console/server.
+- Tidak ada credential sensitif di repo (gunakan .env).
+
 ## 🚀 Fitur Utama
 
 - **REST API FastAPI**: Backend berbasis FastAPI untuk kebutuhan aplikasi Stunting Map Care Plan.
