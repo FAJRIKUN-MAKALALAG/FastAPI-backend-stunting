@@ -109,3 +109,44 @@ def get_supabase_keys():
         "url": "https://sadtnyksdiujxgvwxspc.supabase.co",  # Ganti dengan URL Supabase Anda
         "anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhZHRueWtzZGl1anhndnd4c3BjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NDI3MzYsImV4cCI6MjA2NTIxODczNn0.DbQczBTxQSAVS03DZYYqwO3_isT8cRMTvHLfQFwhkec"                   # Ganti dengan anon key Supabase Anda
     }
+
+@app.on_event("startup")
+async def check_integrations():
+    import asyncio
+    from httpx import AsyncClient
+
+    print("=== Mengecek integrasi chatbot, LLM, dan Supabase... ===")
+
+    # Cek chatbot endpoint
+    try:
+        async with AsyncClient(app=app, base_url="http://test") as ac:
+            resp = await ac.post("/api/chatbot", json={"message": "Tes integrasi"})
+            if resp.status_code == 200 and ("reply" in resp.json() or "error" in resp.json()):
+                print("[OK] Chatbot endpoint terintegrasi.")
+            else:
+                print("[FAIL] Chatbot endpoint gagal:", resp.text)
+    except Exception as e:
+        print("[FAIL] Chatbot endpoint error:", e)
+
+    # Cek LLM endpoint
+    try:
+        async with AsyncClient(app=app, base_url="http://test") as ac:
+            resp = await ac.post("/api/llm-analyze", json={"prompt": "Tes integrasi"})
+            if resp.status_code == 200 and ("reply" in resp.json() or "error" in resp.json()):
+                print("[OK] LLM endpoint terintegrasi.")
+            else:
+                print("[FAIL] LLM endpoint gagal:", resp.text)
+    except Exception as e:
+        print("[FAIL] LLM endpoint error:", e)
+
+    # Cek Supabase keys
+    try:
+        keys = get_supabase_keys()
+        if "url" in keys and "anon_key" in keys:
+            print("[OK] Supabase API terintegrasi.")
+        else:
+            print("[FAIL] Supabase API keys tidak ditemukan.")
+    except Exception as e:
+        print("[FAIL] Supabase API error:", e)
+
+    print("=== Cek integrasi selesai ===")
