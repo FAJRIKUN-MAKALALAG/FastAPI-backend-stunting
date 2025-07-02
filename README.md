@@ -70,10 +70,60 @@ JWT_SECRET=your_jwt_secret
 ### 3. **Jalankan Server**
 
 ```sh
-uvicorn main:app --host 0.0.0.0 --port 8000 
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 Server berjalan di `localhost:8000` (atau port lain sesuai kebutuhan).
+
+---
+
+## 🧪 Cara Menjalankan Test Backend
+
+### 1. **Aktifkan Virtual Environment (Opsional)**
+
+Jika menggunakan virtual environment, aktifkan dulu:
+
+Windows:
+
+```sh
+venv\Scripts\activate
+```
+
+Linux/Mac:
+
+```sh
+source venv/bin/activate
+```
+
+### 2. **Install Dependensi**
+
+Pastikan sudah install dependensi:
+
+```sh
+pip install -r requirements.txt
+```
+
+### 3. **Jalankan Test dengan pytest**
+
+Untuk menjalankan seluruh test (termasuk test_integration.py):
+
+```sh
+pytest
+```
+
+Atau hanya file tertentu:
+
+```sh
+pytest test_integration.py
+```
+
+Jika semua test berhasil, akan muncul pesan seperti:
+
+```
+test_integration.py ... [100%]
+```
+
+Jika ada warning Deprecation (misal terkait FastAPI), test tetap berjalan selama statusnya PASSED.
 
 ---
 
