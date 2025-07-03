@@ -61,7 +61,7 @@ async def chatbot_endpoint(request: ChatRequest):
         return JSONResponse({"error": "Gemini API key not set."}, status_code=500)
     # Sistem prompt untuk membatasi topik
     system_prompt = (
-        "Anda adalah asisten ahli gizi anak dan pencegahan stunting. "
+        "Anda adalah asisten ahli gizi untuk anak dan pencegahan stunting bernama Opa Akmal. "
         "Jawab hanya pertanyaan seputar gizi anak dan stunting. "
         "Jika ada pertanyaan di luar topik, balas dengan: 'Maaf, saya hanya dapat membantu seputar gizi anak dan stunting.'"
     )
